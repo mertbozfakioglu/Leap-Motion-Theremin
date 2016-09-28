@@ -1,11 +1,8 @@
 // (launch with OSC_send.ck)
 
 // the patch
-SndBuf buf => dac;
-// load the file
-//me.sourceDir() + "/../data/snare.wav" => buf.read;
-// don't play yet
-//0 => buf.play; 
+SinOsc s => dac;
+
 
 // create our OSC receiver
 OscRecv recv;
@@ -13,7 +10,7 @@ OscRecv recv;
 9000 => recv.port;
 // start listening (launch thread)
 recv.listen();
-
+10 => s.freq;
 // create an address in the receiver, store in new variable
 recv.event( "/test/address, s" ) @=> OscEvent oe;
 
@@ -50,9 +47,16 @@ while ( true )
         //angle
         <<<inputs[3]>>>;
         
-        // set play pointer to beginning
-        //0 => buf.pos;
+        inputs[0] * 990 + 10 => float x;
+        inputs[1] => float y;
+
+        <<<x>>>;
+
+        x => s.freq;
+        y => s.gain;
+        10::ms => now;
     }
+    
 }
 fun float[] splice( string in , int len)
 {
