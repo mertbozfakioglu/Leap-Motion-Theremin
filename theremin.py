@@ -42,13 +42,24 @@ class SampleListener(Leap.Listener):
             roll = hand.palm_normal.roll
             angle = int(90 - roll*60)
             
+            x = (x+300)/600
+            if x>1:
+                x = 1
+            elif x<0:
+                x = 0
+
+            y = (y-130)/370
+            if y>1:
+                y = 1
+            elif y<0:
+                y = 0            
+
+
+
             oscmsg = OSC.OSCMessage()
             oscmsg.setAddress("/test/address")
             oscmsg.append(str(x)+","+str(y)+","+str(z)+","+str(angle))
             c.send(oscmsg)
-            
-            print str(x)
-
             
             #oscmsg.append(str(y))
             #oscmsg.append(str(z))
