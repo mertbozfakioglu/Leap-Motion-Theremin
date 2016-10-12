@@ -1,8 +1,8 @@
 // (launch with OSC_send.ck)
 
 // the patch
-SinOsc s => dac;
-
+SinOsc s =>  dac;
+//2 => s.sync;
 
 // create our OSC receiver
 OscRecv recv;
@@ -23,11 +23,10 @@ while ( true )
     //<<<inputs[1]>>>;
     //<<<inputs[2]>>>;
     //<<<inputs[3]>>>;
-
-
-    // wait for event to arrive
-    oe => now;    // grab the next message from the queue. 
     
+    
+    // wait for event to arrive
+    oe => now;
     while ( oe.nextMsg() != 0 )
     {   
         // getFloat fetches the expected float (as indicated by "f")
@@ -35,36 +34,39 @@ while ( true )
         // print
         //<<< oe.nextMsg()>>>;
         //<<<oe.getString()>>>;
-        float inputs[];
-        splice(oe.getString(),4) @=> inputs;
         
-        //x
-        <<<inputs[0]>>>;
-        //y
-        <<<inputs[1]>>>;
-        //z
-        <<<inputs[2]>>>;
-        //angle
-        <<<inputs[3]>>>;
+        //x,y,z,roll,grab,pinch
+        splice(oe.getString(),6) @=> float inputs[];
+        <<<inputs[5]>>>;
+        inputs[0]*24+60 => float x;
+        Std.mtof(x) => x; 
+        inputs[1] * .5 => float y;
+        inputs[2] => float z;
+        //inputs[3] => float roll;
+        //inputs[4] => float grab;
+        //inputs[5] => float pinch;
+        //<<<x>>>;
         
-        inputs[0] * 990 + 10 => float x;
-        inputs[1] => float y;
-
-        <<<x>>>;
+        
 
         x => s.freq;
         y => s.gain;
+        Std.fabs(z);
+        //z*.2 => vib.gain; //0, 30 ayarlanacak
+        //.5 => chor.modDepth; 
+        // 2 => chor.modFreq;
         10::ms => now;
-    }
+        
+        }
     
 }
 fun float[] splice( string in , int len)
 {
-    float inputs[4];
+    float inputs[len];
     for (0 => int a ; a < len-1; a++){
-       in.find(',') => int i;
-       in.substring(0,i).toFloat() => inputs[a];
-       in.substring(i+1) => in;
+        in.find(',') => int i;
+        in.substring(0,i).toFloat() => inputs[a];
+        in.substring(i+1) => in;
     }
     in.toFloat() => inputs[len-1];
     return inputs;
