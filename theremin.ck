@@ -1,8 +1,9 @@
 // (launch with OSC_send.ck)
 
 // the patch
-SinOsc s =>  dac;
-//2 => s.sync;
+SinOsc s => NRev rev => dac;
+.001 => rev.mix;
+//6 => vib.freq;
 
 // create our OSC receiver
 OscRecv recv;
@@ -14,15 +15,16 @@ recv.listen();
 // create an address in the receiver, store in new variable
 recv.event( "/test/address, s" ) @=> OscEvent oe;
 
-// infinite event loop
 while ( true )
 {    
     //float inputs[];
     //splice("-19.8903846741,179.325408936,-112.919670105,109",4) @=> inputs;
-    //<<<inputs[0]>>>;
-    //<<<inputs[1]>>>;
-    //<<<inputs[2]>>>;
-    //<<<inputs[3]>>>;
+    //<<<inputs[0]>>>; x
+    //<<<inputs[1]>>>; y
+    //<<<inputs[2]>>>; z
+    //<<<inputs[3]>>>; roll
+    //<<<inputs[4]>>>; grab
+    //<<<inputs[5]>>>; pinch
     
     
     // wait for event to arrive
@@ -37,14 +39,12 @@ while ( true )
         
         //x,y,z,roll,grab,pinch
         splice(oe.getString(),6) @=> float inputs[];
-        <<<inputs[5]>>>;
+        <<<inputs[2]>>>;
         inputs[0]*24+60 => float x;
         Std.mtof(x) => x; 
         inputs[1] * .5 => float y;
         inputs[2] => float z;
-        //inputs[3] => float roll;
-        //inputs[4] => float grab;
-        //inputs[5] => float pinch;
+        inputs[5] => float pinch;
         //<<<x>>>;
         
         
@@ -52,7 +52,8 @@ while ( true )
         x => s.freq;
         y => s.gain;
         Std.fabs(z);
-        //z*.2 => vib.gain; //0, 30 ayarlanacak
+        pinch*.2 => rev.mix;
+        //z*0.15 => vib.gain; //0, 30
         //.5 => chor.modDepth; 
         // 2 => chor.modFreq;
         10::ms => now;
@@ -71,3 +72,4 @@ fun float[] splice( string in , int len)
     in.toFloat() => inputs[len-1];
     return inputs;
 }
+10 => s.freq;
