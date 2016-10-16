@@ -1,12 +1,14 @@
-import os, sys, inspect, thread, time
-src_dir = os.path.dirname(inspect.getfile(inspect.currentframe()))
-arch_dir = '../lib/x64' if sys.maxsize > 2**32 else '../lib/x86'
-sys.path.insert(0, os.path.abspath(os.path.join(src_dir, arch_dir)))
+import sys, math
+#src_dir = os.path.dirname(inspect.getfile(inspect.currentframe()))
+#arch_dir = '../lib/x64' if sys.maxsize > 2**32 else '../lib/x86'
+#sys.path.insert(0, os.path.abspath(os.path.join(src_dir, arch_dir)))
 
 import Leap
 import OSC
 c = OSC.OSCClient()
 c.connect(('127.0.0.1', 9000))   # connect to SuperCollider
+
+debug = False
 
 class SampleListener(Leap.Listener):
     """
@@ -34,14 +36,50 @@ class SampleListener(Leap.Listener):
         #pygame.draw.rect(screen,(255,255,255),Rect(192,39,640,640),3)
         frame = controller.frame()
         print "frame"
+        if frame.hands.is_empty and not debug:
+            oscmsg = OSC.OSCMessage()
+            oscmsg.setAddress("/test/address")
+            oscmsg.append("0.0,0.0,0.0,0.0,0.0,0.0")
+            c.send(oscmsg)
         for hand in frame.hands:
             print "hand"
-            x = hand.pointables.frontmost.tip_position.x 
-            y = hand.pointables.frontmost.tip_position.y
-            z = hand.pointables.frontmost.tip_position.z
+            #x = hand.pointables.frontmost.tip_position.x 
+            #y = hand.pointables.frontmost.tip_position.y
+            #z = hand.pointables.frontmost.tip_position.z
             roll = hand.palm_normal.roll
             angle = int(90 - roll*60)
-            
+            grab = hand.grab_strength
+            thumb =  hand.fingers.finger_type(0)[0]
+            index =  hand.fingers.finger_type(1)[0]
+
+            x = index.tip_position.x
+            y = index.tip_position.y
+            z = index.tip_position.z
+
+            dist = index.tip_position-thumb.tip_position
+            pinch = math.sqrt(dist[0]**2+dist[1]**2+dist[2]**2)
+            pinch = (pinch-25)/75
+            if pinch>1:
+                pinch = 1
+            elif pinch<0:
+                pinch = 0
+
+            #print pinch
+            """
+            sphere = hand.sphere_radius   
+            sphere = (sphere-40)/150
+            if sphere>1:
+                sphere = 1
+            elif sphere<0:
+                sphere = 0
+                """
+            roll = roll/6+0.5
+            if roll>1:
+                roll = 1
+            elif roll<0:
+                roll = 0
+            #print roll
+
             x = (x+300)/600
             if x>1:
                 x = 1
@@ -54,20 +92,14 @@ class SampleListener(Leap.Listener):
             elif y<0:
                 y = 0            
 
-
-
-            oscmsg = OSC.OSCMessage()
-            oscmsg.setAddress("/test/address")
-            oscmsg.append(str(x)+","+str(y)+","+str(z)+","+str(angle))
-            c.send(oscmsg)
+            if not debug:
+            	oscmsg = OSC.OSCMessage()
+            	oscmsg.setAddress("/test/address")
+            	oscmsg.append(str(x)+","+str(y)+","+str(z)+","+str(roll)+","+str(grab)+","+str(pinch))
+            	c.send(oscmsg)
             
-            #oscmsg.append(str(y))
-            #oscmsg.append(str(z))
-            #oscmsg.append(str(angle))
-
-            
-            
-
+            #print str(y)
+            #print str(x)            
             
             if angle>180:
                 angle = 180
