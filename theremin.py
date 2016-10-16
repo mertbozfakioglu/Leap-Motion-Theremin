@@ -1,4 +1,4 @@
-import sys, math
+import sys, math, time
 #src_dir = os.path.dirname(inspect.getfile(inspect.currentframe()))
 #arch_dir = '../lib/x64' if sys.maxsize > 2**32 else '../lib/x86'
 #sys.path.insert(0, os.path.abspath(os.path.join(src_dir, arch_dir)))
@@ -111,8 +111,8 @@ class SampleListener(Leap.Listener):
                 velocity = 180
             elif velocity<10:
                 velocity = 0
-            #print (x,y,z,velocity,angle)
-
+            #Slow down the code to evoid accumulation of messages on the ChucK side 
+            time.sleep(0.01)
 def main():
     listener = SampleListener()
     controller = Leap.Controller()
